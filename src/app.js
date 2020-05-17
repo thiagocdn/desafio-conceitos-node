@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+
 const { uuid } = require("uuidv4");
 
 const app = express();
@@ -10,57 +11,59 @@ app.use(cors());
 const repositories = [];
 
 app.get("/repositories", (request, response) => {
-
   return response.json(repositories);
 });
 
 app.post("/repositories", (request, response) => {
   const { title, url, techs } = request.body;
 
-  const repository = { id: uuid(), title, url, techs, likes: 0 };
+  const newRepository = {
+    id: uuid(),
+    title,
+    url,
+    techs,
+    likes: 0
+  }
 
-  repositories.push(repository);
+  repositories.push(newRepository);
 
-  return response.json(repository);
-
+  return response.json(newRepository);
 });
 
 app.put("/repositories/:id", (request, response) => {
-  var { title, url, techs } = request.body;
+  const { title, url, techs } = request.body;
   const { id } = request.params;
 
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return response.status(400).json({ error: 'Unable to find the provided ID.'});
+    return response.status(400).json('Repositorio não encontrado!');
   }
 
-  if (title == 'undefined') title = repositories[repositoryIndex].title;
-  if (url == 'undefined') url = repositories[repositoryIndex].url;
-  if (techs == 'undefined') techs = repositories[repositoryIndex].techs;
-  likes = repositories[repositoryIndex].likes;
+  repositories[repositoryIndex] = {
+    id,
+    title: title ? title : repositories[repositoryIndex].title,
+    url: url ? url : repositories[repositoryIndex].url,
+    techs: techs ? techs : repositories[repositoryIndex].techs,
+    likes: repositories[repositoryIndex].likes
+  }
 
-  const repository = { id, title, url, techs, likes };
+  return response.json(repositories[repositoryIndex]);
 
-  repositories[repositoryIndex] = repository;
-
-  return response.json(repository);
-  
 });
 
-app.delete("/repositories/:id", (req, res) => {
-  const { id } = req.params;
+app.delete("/repositories/:id", (request, response) => {
+  const { id } = request.params;
 
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return res.status(400).json({ error: 'Unable to find the provided ID.'});
+    return response.status(400).json('Repositorio não encontrado!');
   }
 
-  repositories.splice(repositoryIndex,1);
+  repositories.splice(repositoryIndex, 1);
 
-  return res.status(204).send();
-
+  return response.status(204).send();
 });
 
 app.post("/repositories/:id/like", (request, response) => {
@@ -69,10 +72,10 @@ app.post("/repositories/:id/like", (request, response) => {
   const repositoryIndex = repositories.findIndex(repository => repository.id === id);
 
   if (repositoryIndex < 0) {
-    return response.status(400).json({ error: 'Unable to find the provided ID.'});
+    return response.status(400).json('Repositorio não encontrado!');
   }
 
-  repositories[repositoryIndex].likes = repositories[repositoryIndex].likes + 1;
+  repositories[repositoryIndex].likes += 1;
 
   return response.json(repositories[repositoryIndex]);
 });
